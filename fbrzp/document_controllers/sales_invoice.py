@@ -96,7 +96,7 @@ class SalesInvoice(SalesInvoiceController):
                 "productDescription": item.description,
                 "rate": f"{cint(self.taxes[0].rate)}%",
                 "uoM": item.fbr_uom if item.fbr_uom else "KG",
-                "quantity": ,
+                "quantity": item.weight if item.weight > 0 else item.qty,
                 "totalValues": round(item.amount + tax_amount, 2),  # Placeholder, adjust as needed
                 "valueSalesExcludingST": round(item.amount, 2),
                 "fixedNotifiedValueOrRetailPrice": 0,  # Placeholder, adjust as needed
@@ -110,10 +110,9 @@ class SalesInvoice(SalesInvoiceController):
                 "saleType": "Goods at standard rate (default)",  # Adjust based on your logic
                 "sroItemSerialNo": ""  # Placeholder, adjust as needed
             }
-
+            
             if self.efs_invoice:
                 item_data["quantity"] = item.efs_weight
-
             if self.goods_sold_at_reduced_rate:
                 item_data["sroScheduleNo"]=self.goods_at_reduced_rate().get('sroScheduleNo',"")
                 item_data["saleType"]=self.goods_at_reduced_rate().get('saleType',"")
@@ -121,7 +120,7 @@ class SalesInvoice(SalesInvoiceController):
 
             items.append(item_data)
         return items
-    
+        
     # def get_and_set_uom(self, hs_code):
     #     hs_code_doc = frappe.new_doc("HS Code")
     #     if frappe.db.exists("HS Code", hs_code):
@@ -151,3 +150,5 @@ class SalesInvoice(SalesInvoiceController):
             return fbr_tax_id
         else:
             return None
+        
+        
