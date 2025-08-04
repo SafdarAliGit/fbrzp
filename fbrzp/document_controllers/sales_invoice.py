@@ -22,7 +22,7 @@ class SalesInvoice(SalesInvoiceController):
         try:
 
             api = FBRDigitalInvoicingAPI()
-            response = api.make_request("POST", "di_data/v1/di/postinvoicedata_sb", self.get_mapped_data())
+            response = api.make_request("POST", "di_data/v1/di/postinvoicedata", self.get_mapped_data())
             resdata = response.get("validationResponse")
             
             if resdata.get("status") == "Valid": 
