@@ -91,11 +91,10 @@ class SalesInvoice(SalesInvoiceController):
         for item in self.items:
             # uom = self.get_and_set_uom(item.hs_code)
             tax_amount = round(item.amount * (self.taxes[0].rate /100), 2)
-            escaped_descrip = strip_html_tags(item.description)
 
             item_data = {
                 "hsCode": item.hs_code,  # Default HS Code if not set
-                "productDescription": f"{escaped_descrip}-{item.idx}",
+                "productDescription": f"{strip_html_tags(item.description or "")}-{item.idx}",
                 "rate": f"{cint(self.taxes[0].rate)}%",
                 "uoM": item.fbr_uom if item.fbr_uom else "KG",
                 "quantity": item.weight if item.weight > 0 else item.qty,
