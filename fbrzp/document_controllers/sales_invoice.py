@@ -89,6 +89,7 @@ class SalesInvoice(SalesInvoiceController):
     def get_items(self):
         items = []
         for item in self.items:
+            escaped_descrip = ""
             # uom = self.get_and_set_uom(item.hs_code)
             tax_amount = round(item.amount * (self.taxes[0].rate /100), 2)
             escaped_descrip = strip_html_tags(item.description)
