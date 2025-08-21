@@ -96,7 +96,7 @@ class SalesInvoice(SalesInvoiceController):
 
             item_data = {
                 "hsCode": item.hs_code,  # Default HS Code if not set
-                "productDescription": f"{escaped_descrip}-{item.idx}",
+                "productDescription": f"{item.item_code}-{item.idx}",
                 "rate": f"{cint(self.taxes[0].rate)}%",
                 "uoM": item.fbr_uom if item.fbr_uom else "KG",
                 "quantity": item.weight if item.weight > 0 else item.qty,
