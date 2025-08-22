@@ -23,7 +23,7 @@ class SalesInvoice(SalesInvoiceController):
         try:
 
             api = FBRDigitalInvoicingAPI()
-            response = api.make_request("POST", "di_data/v1/di/postinvoicedata", self.get_mapped_data())
+            response = api.make_request("POST", "di_data/v1/di/postinvoicedata_sb", self.get_mapped_data())
             resdata = response.get("validationResponse")
             
             if resdata.get("status") == "Valid": 
@@ -88,11 +88,11 @@ class SalesInvoice(SalesInvoiceController):
     
     def get_items(self):
         items = []
-        for item in self.items:
+        for item in self.fbr_sales_invoice_item:
             escaped_descrip = ""
             # uom = self.get_and_set_uom(item.hs_code)
             tax_amount = round(item.amount * (self.taxes[0].rate /100), 2)
-            escaped_descrip = strip_html_tags(item.description)
+            # escaped_descrip = strip_html_tags(item.description)
 
             item_data = {
                 "hsCode": item.hs_code,  # Default HS Code if not set
@@ -153,5 +153,52 @@ class SalesInvoice(SalesInvoiceController):
             return fbr_tax_id
         else:
             return None
-        
-        
+       
+       
+    def on_update(self):
+        super().on_update()
+
+        # Your SQL query remains the same
+        items = frappe.db.sql(
+            """
+            SELECT
+                hs_code,
+                description,
+                fbr_uom,
+                delivery_note,
+                item_name,
+                item_code,
+                rate,
+                SUM(qty) AS qty,
+                SUM(efs_weight) AS efs_weight,
+                SUM(weight) AS weight,
+                SUM(amount) AS amount
+            FROM `tabSales Invoice Item`
+            WHERE parent = %s
+            GROUP BY item_code, rate
+            """,
+            (self.name,),
+            as_dict=True
+        )
+
+        # Clear or reset the child table if needed
+        self.set('fbr_sales_invoice_item', [])
+
+        for item in items:
+            row = self.append('fbr_sales_invoice_item', {})
+            row.hs_code = item.hs_code
+            row.description = item.description
+            row.fbr_uom = item.fbr_uom
+            row.delivery_note = item.delivery_note
+            row.item_name = item.item_name
+            row.item_code = item.item_code
+            row.rate = item.rate
+            row.qty = item.qty
+            row.efs_weight = item.efs_weight
+            row.weight = item.weight
+            row.amount = item.amount
+
+     
+    
+            
+
