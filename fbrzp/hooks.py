@@ -139,7 +139,7 @@ override_doctype_class = {
 
 doc_events = {
 	"Sales Invoice": {
-		"on_update": "fbrzp.api.sales_invoice.custom_on_update"
+		"on_update": "fbrzp.document_controllers.sales_invoice.update_fbr_sales_invoice_items"
 	}
 }
 

@@ -155,48 +155,51 @@ class SalesInvoice(SalesInvoiceController):
             return None
        
        
-    def on_update(self):
-        super().on_update()
 
-        # Your SQL query remains the same
-        items = frappe.db.sql(
-            """
-            SELECT
-                hs_code,
-                description,
-                fbr_uom,
-                delivery_note,
-                item_name,
-                item_code,
-                rate,
-                SUM(qty) AS qty,
-                SUM(efs_weight) AS efs_weight,
-                SUM(weight) AS weight,
-                SUM(amount) AS amount
-            FROM `tabSales Invoice Item`
-            WHERE parent = %s
-            GROUP BY item_code, rate
-            """,
-            (self.name,),
-            as_dict=True
-        )
+def update_fbr_sales_invoice_items(doc, method):
+    """Custom update function for Sales Invoice to fill fbr_sales_invoice_item child table"""
 
-        # Clear or reset the child table if needed
-        self.set('fbr_sales_invoice_item', [])
+    # Fetch items grouped by item_code and rate
+    items = frappe.db.sql(
+        """
+        SELECT
+            hs_code,
+            description,
+            fbr_uom,
+            delivery_note,
+            item_name,
+            item_code,
+            rate,
+            SUM(qty) AS qty,
+            SUM(efs_weight) AS efs_weight,
+            SUM(weight) AS weight,
+            SUM(amount) AS amount
+        FROM `tabSales Invoice Item`
+        WHERE parent = %s
+        GROUP BY item_code, rate
+        """,
+        (doc.name,),
+        as_dict=True
+    )
 
-        for item in items:
-            row = self.append('fbr_sales_invoice_item', {})
-            row.hs_code = item.hs_code
-            row.description = item.description
-            row.fbr_uom = item.fbr_uom
-            row.delivery_note = item.delivery_note
-            row.item_name = item.item_name
-            row.item_code = item.item_code
-            row.rate = item.rate
-            row.qty = item.qty
-            row.efs_weight = item.efs_weight
-            row.weight = item.weight
-            row.amount = item.amount
+    # Clear existing child table entries
+    doc.set('fbr_sales_invoice_item', [])
+
+    # Populate child table with new grouped items
+    for item in items:
+        row = doc.append('fbr_sales_invoice_item', {})
+        row.hs_code = item.hs_code
+        row.description = item.description
+        row.fbr_uom = item.fbr_uom
+        row.delivery_note = item.delivery_note
+        row.item_name = item.item_name
+        row.item_code = item.item_code
+        row.rate = item.rate
+        row.qty = item.qty
+        row.efs_weight = item.efs_weight
+        row.weight = item.weight
+        row.amount = item.amount
+
 
      
     
