@@ -160,52 +160,51 @@ class SalesInvoice(SalesInvoiceController):
        
        
 
-def update_fbr_sales_invoice_items(doc, method):
-    """Custom update function for Sales Invoice to fill fbr_sales_invoice_item child table"""
+import frappe
 
-    # Fetch items grouped by item_code and rate
-    items = frappe.db.sql(
-        """
+def update_fbr_sales_invoice_items(doc, method):
+    # Run only once per save cycle
+    if getattr(doc, "_fbr_items_updated", False):
+        return
+    doc._fbr_items_updated = True
+
+    # First delete all existing FBR items using SQL
+    frappe.db.sql("""
+        DELETE FROM `tabFbr Sales Invoice Item` 
+        WHERE parent = %s
+    """, (doc.name,))
+
+    # Gather grouped data
+    items = frappe.db.sql("""
         SELECT
-            hs_code,
-            description,
-            fbr_uom,
-            delivery_note,
-            item_name,
-            item_code,
-            rate,
+            hs_code, description, fbr_uom, delivery_note,
+            item_name, item_code, rate,
             SUM(qty) AS qty,
             SUM(efs_weight) AS efs_weight,
             SUM(weight) AS weight,
-            ROUND(SUM(amount),0) AS amount
+            ROUND(SUM(amount), 0) AS amount
         FROM `tabSales Invoice Item`
         WHERE parent = %s
-        GROUP BY item_code, rate
-        """,
-        (doc.name,),
-        as_dict=True
-    )
+        GROUP BY item_code, rate, hs_code, fbr_uom
+    """, (doc.name,), as_dict=True)
 
-    # Clear existing child table entries
+    # Clear the in-memory child table
     doc.set('fbr_sales_invoice_item', [])
 
-    # Populate child table with new grouped items
+    # Insert new rows
     for item in items:
         row = doc.append('fbr_sales_invoice_item', {})
-        row.hs_code = item.hs_code
-        row.description = item.description
-        row.fbr_uom = item.fbr_uom
-        row.delivery_note = item.delivery_note
-        row.item_name = item.item_name
-        row.item_code = item.item_code
-        row.rate = item.rate
-        row.qty = item.qty
-        row.efs_weight = item.efs_weight
-        row.weight = item.weight
-        row.amount = item.amount
+        row.hs_code = item.hs_code or ""
+        row.description = item.description or ""
+        row.fbr_uom = item.fbr_uom or ""
+        row.delivery_note = item.delivery_note or ""
+        row.item_name = item.item_name or ""
+        row.item_code = item.item_code or ""
+        row.rate = item.rate or 0
+        row.qty = item.qty or 0
+        row.efs_weight = item.efs_weight or 0
+        row.weight = item.weight or 0
+        row.amount = item.amount or 0
 
-
-     
-    
-            
-
+    # Persist changes
+    doc.db_update_all()
