@@ -91,7 +91,7 @@ class SalesInvoice(SalesInvoiceController):
         for item in self.fbr_sales_invoice_item:
             escaped_descrip = ""
             # uom = self.get_and_set_uom(item.hs_code)
-            tax_amount = round(item.amount * (self.taxes[0].rate /100), 2)
+            tax_amount = round(item.amount * (self.taxes[0].rate /100), 3)
             # escaped_descrip = strip_html_tags(item.description)
 
             item_data = {
