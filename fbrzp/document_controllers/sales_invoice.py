@@ -89,40 +89,43 @@ class SalesInvoice(SalesInvoiceController):
     def get_items(self):
         items = []
         for item in self.fbr_sales_invoice_item:
-            escaped_descrip = ""
-            # uom = self.get_and_set_uom(item.hs_code)
-            tax_amount = round(item.amount * (self.taxes[0].rate /100), 2)
-            # escaped_descrip = strip_html_tags(item.description)
+            tax_amount = round(item.amount * (self.taxes[0].rate / 100), 2)
+            total_values = round(item.amount + tax_amount, 2)
+            value_excl = round(item.amount, 2)
 
             item_data = {
-                "hsCode": item.hs_code,  # Default HS Code if not set
+                "hsCode": item.hs_code,
                 "productDescription": f"{item.item_code}-{item.idx}",
                 "rate": f"{cint(self.taxes[0].rate)}%",
                 "uoM": item.fbr_uom if item.fbr_uom else "KG",
                 "quantity": item.weight if item.weight > 0 else item.qty,
-                "totalValues": item.amount + tax_amount,  # Placeholder, adjust as needed
-                "valueSalesExcludingST": item.amount,
-                "fixedNotifiedValueOrRetailPrice": 0,  # Placeholder, adjust as needed
-                "salesTaxApplicable": tax_amount if tax_amount > 0 else 0,  # Assuming first tax is sales tax
-                "salesTaxWithheldAtSource": 0,  # Placeholder, adjust as needed
-                "extraTax": "",  # Placeholder, adjust as needed
-                "furtherTax": 0,  # Assuming first tax is further tax
-                "sroScheduleNo": "",  # Placeholder, adjust as needed
-                "fedPayable": 0,  # Placeholder, adjust as needed
+                "totalValues": f"{total_values:.2f}",
+                "valueSalesExcludingST": f"{value_excl:.2f}",
+                "fixedNotifiedValueOrRetailPrice": 0,
+                "salesTaxApplicable": f"{tax_amount:.2f}" if tax_amount > 0 else "0.00",
+                "salesTaxWithheldAtSource": 0,
+                "extraTax": "",
+                "furtherTax": 0,
+                "sroScheduleNo": "",
+                "fedPayable": 0,
                 "discount": 0,
-                "saleType": "Goods at standard rate (default)",  # Adjust based on your logic
-                "sroItemSerialNo": ""  # Placeholder, adjust as needed
+                "saleType": "Goods at standard rate (default)",
+                "sroItemSerialNo": ""
             }
-            
+
             if self.efs_invoice:
                 item_data["quantity"] = item.efs_weight
             if self.goods_sold_at_reduced_rate:
-                item_data["sroScheduleNo"]=self.goods_at_reduced_rate().get('sroScheduleNo',"")
-                item_data["saleType"]=self.goods_at_reduced_rate().get('saleType',"")
-                item_data["sroItemSerialNo"]=self.goods_at_reduced_rate().get('sroItemSerialNo',"")
+                reduced = self.goods_at_reduced_rate()
+                item_data.update({
+                    "sroScheduleNo": reduced.get('sroScheduleNo', ""),
+                    "saleType": reduced.get('saleType', item_data["saleType"]),
+                    "sroItemSerialNo": reduced.get('sroItemSerialNo', "")
+                })
 
             items.append(item_data)
         return items
+
         
     # def get_and_set_uom(self, hs_code):
     #     hs_code_doc = frappe.new_doc("HS Code")
