@@ -177,7 +177,7 @@ def update_fbr_sales_invoice_items(doc, method):
             SUM(qty) AS qty,
             SUM(efs_weight) AS efs_weight,
             SUM(weight) AS weight,
-            SUM(amount) AS amount
+            ROUND(SUM(amount),0) AS amount
         FROM `tabSales Invoice Item`
         WHERE parent = %s
         GROUP BY item_code, rate
