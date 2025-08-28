@@ -91,7 +91,7 @@ class SalesInvoice(SalesInvoiceController):
         for item in self.fbr_sales_invoice_item:
             escaped_descrip = ""
             # uom = self.get_and_set_uom(item.hs_code)
-            tax_amount = round(item.amount * (self.taxes[0].rate /100), 3)
+            tax_amount = round(item.amount * (self.taxes[0].rate /100), 2)
             # escaped_descrip = strip_html_tags(item.description)
 
             item_data = {
@@ -101,7 +101,7 @@ class SalesInvoice(SalesInvoiceController):
                 "uoM": item.fbr_uom if item.fbr_uom else "KG",
                 "quantity": item.weight if item.weight > 0 else item.qty,
                 "totalValues": round(item.amount + tax_amount, 2),  # Placeholder, adjust as needed
-                "valueSalesExcludingST": round(item.amount, 2),
+                "valueSalesExcludingST": item.amount,
                 "fixedNotifiedValueOrRetailPrice": 0,  # Placeholder, adjust as needed
                 "salesTaxApplicable": tax_amount if tax_amount > 0 else 0,  # Assuming first tax is sales tax
                 "salesTaxWithheldAtSource": 0,  # Placeholder, adjust as needed
