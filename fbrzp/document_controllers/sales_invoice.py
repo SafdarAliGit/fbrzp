@@ -83,7 +83,11 @@ class SalesInvoice(SalesInvoiceController):
             data["scenarioId"]=self.goods_at_reduced_rate().get('scenarioId',"")
        
         data["items"] = self.get_items()
-   
+        frappe.log_error(
+            title="SENDING DATA",
+            message=frappe.as_json(data, indent=4)
+        )
+        frappe.throw("Stoped")
         return data
     
     def get_items(self):
