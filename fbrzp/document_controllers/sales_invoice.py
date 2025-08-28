@@ -100,7 +100,7 @@ class SalesInvoice(SalesInvoiceController):
                 "rate": f"{cint(self.taxes[0].rate)}%",
                 "uoM": item.fbr_uom if item.fbr_uom else "KG",
                 "quantity": item.weight if item.weight > 0 else item.qty,
-                "totalValues": round(item.amount + tax_amount, 2),  # Placeholder, adjust as needed
+                "totalValues": item.amount + tax_amount,  # Placeholder, adjust as needed
                 "valueSalesExcludingST": item.amount,
                 "fixedNotifiedValueOrRetailPrice": 0,  # Placeholder, adjust as needed
                 "salesTaxApplicable": tax_amount if tax_amount > 0 else 0,  # Assuming first tax is sales tax
