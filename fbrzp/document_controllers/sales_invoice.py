@@ -83,11 +83,11 @@ class SalesInvoice(SalesInvoiceController):
             data["scenarioId"]=self.goods_at_reduced_rate().get('scenarioId',"")
        
         data["items"] = self.get_items()
-        frappe.log_error(
-            title="SENDING DATA",
-            message=frappe.as_json(data, indent=4)
-        )
-        frappe.throw("Stoped")
+        # frappe.log_error(
+        #     title="SENDING DATA",
+        #     message=frappe.as_json(data, indent=4)
+        # )
+        # frappe.throw("Stoped")
         return data
     
     def get_items(self):
@@ -97,14 +97,14 @@ class SalesInvoice(SalesInvoiceController):
             # uom = self.get_and_set_uom(item.hs_code)
             tax_amount = round(item.amount * (self.taxes[0].rate /100), 2)
             # escaped_descrip = strip_html_tags(item.description)
-
+            total_values = item.amount + tax_amount
             item_data = {
                 "hsCode": item.hs_code,  # Default HS Code if not set
                 "productDescription": f"{item.item_code}-{item.idx}",
                 "rate": f"{cint(self.taxes[0].rate)}%",
                 "uoM": item.fbr_uom if item.fbr_uom else "KG",
                 "quantity": item.weight if item.weight > 0 else item.qty,
-                "totalValues": round(item.amount + tax_amount, 2),  # Placeholder, adjust as needed
+                "totalValues": f"{total_values:.2f}",  # Placeholder, adjust as needed
                 "valueSalesExcludingST": round(item.amount, 2),
                 "fixedNotifiedValueOrRetailPrice": 0,  # Placeholder, adjust as needed
                 "salesTaxApplicable": tax_amount if tax_amount > 0 else 0,  # Assuming first tax is sales tax
